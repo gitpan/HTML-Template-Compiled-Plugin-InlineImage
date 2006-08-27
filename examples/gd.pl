@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id: gd.pl,v 1.1 2006/08/26 15:22:00 tinita Exp $
 use strict;
 use warnings;
 use blib;
@@ -32,13 +31,14 @@ $im->arc( 50, 50, 95, 75, 0, 360, $blue );
 $im->fill( 50, 50, $red );
 
 # make sure we are writing to a binary stream
-binmode STDOUT;
+# binmode STDOUT;
 # Convert the image to PNG and print it on standard output
 # my $bin = $im->png;
 
 # ---------- HTC ----------------
 my $template;
 my $script;
+$HTML::Template::Compiled::Plugin::InlineImage::SIZE_WARNING = 0;
 {
     local $/;
     $template = <DATA>;
@@ -65,10 +65,10 @@ __DATA__
 <body bgcolor="#dddddd">
 
 <h2>Images</h2>
-<br>PNG:  <img src="<%= gd escape=INLINE_IMG %>" alt="test">
-<br>PNG:  <img src="<%= gd escape=INLINE_IMG_PNG %>" alt="test">
-<br>GIF:  <img src="<%= gd escape=INLINE_IMG_GIF %>" alt="test">
-<br>JPEG: <img src="<%= gd escape=INLINE_IMG_JPEG %>" alt="test">
+<br>PNG:  <img <%= gd escape=INLINE_IMG %> alt="test">
+<br>PNG:  <img <%= gd escape=INLINE_IMG_PNG %> alt="test">
+<br>GIF:  <img <%= gd escape=INLINE_IMG_GIF %> alt="test">
+<br>JPEG: <img <%= gd escape=INLINE_IMG_JPEG %> alt="test">
 
 <hr>
 <h2>The Template:</h2>

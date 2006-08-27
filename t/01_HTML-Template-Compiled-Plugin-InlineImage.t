@@ -1,4 +1,4 @@
-# $Id: 01_HTML-Template-Compiled-Plugin-InlineImage.t,v 1.2 2006/08/26 15:02:30 tinita Exp $
+# $Id: 01_HTML-Template-Compiled-Plugin-InlineImage.t,v 1.4 2006/08/27 10:22:10 tinita Exp $
 use Test::More tests => 2;
 use blib;
 use HTML::Template::Compiled;
@@ -11,6 +11,7 @@ my $htc = HTML::Template::Compiled->new(
 );
 my $gd_mock = bless {}, "GD::Image";
 sub GD::Image::png { return "foo" }
+sub GD::Image::getBounds  { return 42,42 }
 my $encoded = encode_base64( GD::Image::png() );
 $htc->param( foo => $gd_mock );
 my $out = $htc->output;
@@ -18,7 +19,7 @@ my $out = $htc->output;
 #print $out, $/;
 cmp_ok(
     $out, 'eq',
-    "data:image/png;base64,$encoded",
+    qq{src="data:image/png;base64,$encoded" width="42" height="42"},
     "Simple INLINE_IMG_PNG test"
 );
 

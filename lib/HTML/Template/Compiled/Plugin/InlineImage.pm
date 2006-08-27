@@ -1,20 +1,21 @@
 package HTML::Template::Compiled::Plugin::InlineImage;
-# $Id: InlineImage.pm,v 1.2 2006/08/26 15:05:21 tinita Exp $
+# $Id: InlineImage.pm,v 1.10 2006/08/27 10:30:44 tinita Exp $
 use strict;
 use warnings;
 use Carp qw(croak carp);
 use HTML::Template::Compiled::Expression qw(:expressions);
 use HTML::Template::Compiled;
 use MIME::Base64;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 HTML::Template::Compiled->register(__PACKAGE__);
+our $SIZE_WARNING = 1;
 
 
 sub register {
     my ($class) = @_;
     my %plugs = (
         escape => {
-            # <img src="<%= gd_object escape="INLINE_IMG"%>
+            # <img <%= gd_object escape="INLINE_IMG"%> alt="blah">
             INLINE_IMG => sub {
                 HTML::Template::Compiled::Plugin::InlineImage::inline(
                     type => 'png',
@@ -48,17 +49,28 @@ sub inline {
     my (%args) = @_;
     my $image = $args{image};
     my $type = $args{type};
-    my $binary = ref $image eq 'GD::Image'
+    my ($binary, $width, $height) = ref $image eq 'GD::Image'
         ? gd_to_binary($image,$type)
         : croak "unknown image type " . ref $image;
     my $base64 = encode_base64($binary);
-    return "data:image/png;base64,$base64";
+    my $string = "data:image/$type;base64,$base64";
+    my $l = length $string;
+    if ($l > 1024 && $SIZE_WARNING) {
+        carp "Image is too big ($l characters > 1024)";
+    }
+    my $attributes = qq{src="$string"};
+    if (defined $width) { $attributes .= qq{ width="$width"} }
+    if (defined $height) { $attributes .= qq{ height="$height"} }
+    return $attributes;
 }
 
 sub gd_to_binary {
-    if ($_[1] eq 'png') { return $_[0]->png }
-    if ($_[1] eq 'gif') { return $_[0]->gif }
-    if ($_[1] eq 'jpeg') { return $_[0]->jpeg }
+    my $binary;
+    if ($_[1] eq 'png') { $binary = $_[0]->png }
+    if ($_[1] eq 'gif') { $binary = $_[0]->gif }
+    if ($_[1] eq 'jpeg') { $binary = $_[0]->jpeg }
+    my ($width,$height) = $_[0]->getBounds();
+    return ($binary, $width, $height);
 }
 
 1;
@@ -69,7 +81,7 @@ __END__
 
 =head1 NAME
 
-HTML::Template::Compiled::Plugin::InlineImage - XML-Escaping for HTC
+HTML::Template::Compiled::Plugin::InlineImage - Inline-Images with HTML::Template::Compiled
 
 =head1 SYNOPSIS
 
@@ -89,9 +101,22 @@ The Template:
 
     <html>
         <body>
-        <img src="[%= gd_object escape="INLINE_IMG" %]" alt="[Rendered GD Image]">
+        <img [%= gd_object escape="INLINE_IMG" %] alt="[Rendered GD Image]">
         </body>
     </html>
+
+This will create an inline image. The GD-object output is turned into base64
+and put into a src attribute.
+
+The output looks like
+
+    src="data:image/type;base64,...." width="42" height="42"
+
+Note that the maximum length for a HTML src attribute is 1024. If your image
+is bigger you will get a warning.
+
+To avoid the warning, set
+C<$HTML::Template::Compiled::Plugin::InlineImage::SIZE_WARNING> to 0.
 
 =head1 DESCRIPTION
 
@@ -130,7 +155,9 @@ renders as png
 
 =item register
 
-gets called by HTC
+Gets called by HTC. It should return a hashref. I will document soon
+in L<HTML::Template::Compiled> what this method should return to
+create a plugin. Until then, have a lok at the source =)
 
 =back
 
@@ -149,6 +176,8 @@ The subroutine determines which kind of image object we have
 and calls the corresponding *_to_binary method. (At the moment
 only L<GD> is supported.)
 
+This function is usually only used internally.
+
 =item gd_to_binary
 
 Arguments: ($gd_object, $type)
@@ -157,11 +186,19 @@ $type can be png, jpeg or gif.
 
 Returns:
 
-    data:image/$type;base64,$the_rendered_image_as_base64
+    src="data:image/$type;base64,$the_rendered_image_as_base64",
+    width of image,
+    heigth of image
+
+This function is usually only used internally.
 
 =back
 
 =cut
+
+EXAMPLES
+
+See L<"examples/gd.pl"> and L<"examples/gd.html"> for a simple example.
 
 =head1 SEE ALSO
 
