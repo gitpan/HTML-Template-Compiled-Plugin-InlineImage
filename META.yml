@@ -1,13 +1,18 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         HTML-Template-Compiled-Plugin-InlineImage
-version:      0.02
-version_from: lib/HTML/Template/Compiled/Plugin/InlineImage.pm
-installdirs:  site
+---
+name: HTML-Template-Compiled-Plugin-InlineImage
+version: 0.03
+author: ~
+abstract: Inline-Images with HTML::Template::Compiled
+license: perl
 requires:
-    GD:                            0
-    HTML::Template::Compiled:      0.73
-    MIME::Base64:                  0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+  HTML::Template::Compiled: 0.73
+  MIME::Base64: 0
+recommends:
+  File::MMagic: 0
+  GD: 0
+  HTML::Template::Compiled: 0.74
+provides:
+  HTML::Template::Compiled::Plugin::InlineImage:
+    file: lib/HTML/Template/Compiled/Plugin/InlineImage.pm
+    version: 0.03
+generated_by: Module::Build version 0.2611
